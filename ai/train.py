@@ -1,24 +1,26 @@
-import tensorflow as tf
+from pathlib import Path
+import json
 from ai.model import CNNModel
+from ai.preprocess import prepare_data
 
 def main():
-    train_dir = "data/train"
-    val_dir = "data/val"
-    img_size = (128,128)
+    data_dir = "data/raw"
+    img_size = (128, 128)
+    val_split = 0.2
     batch_size = 32
 
-    train_gen = tf.keras.preprocessing.image.ImageDataGenerator(rescale = 1./255)
-    val_gen = tf.keras.preprocessing.image.ImageDataGenerator(rescale = 1./255)
+    train_flow, val_flow, num_classes = prepare_data(
+        data_dir=data_dir, img_size=img_size, val_split=val_split, batch_size=batch_size
+    )
 
-    train_flow = train_gen.flow_from_directory(
-        train_dir, target_size = img_size, batch_size = batch_size, class_mode = 'categorical') 
-    val_flow = val_gen.flow_from_directory(
-        val_dir, target_size = img_size, batch_size = batch_size, class_mode = 'categorical')
-    
-    num_classes = len(train_flow.class_indices)
+ 
+    labels_path = Path("model/labels.json")
+    labels_path.parent.mkdir(parents=True, exist_ok=True)
+    id_to_label = {idx: cls for cls, idx in train_flow.class_indices.items()}
+    labels_path.write_text(json.dumps(id_to_label, ensure_ascii=False, indent=2), encoding="utf-8")
 
     model = CNNModel(img_size=img_size, num_classes=num_classes)
-    model.train(train_flow, val_flow, epochs=10, save_path="model/model.h5")
+    model.train(train_flow, val_flow, epochs=30, save_path="model/model.h5")
 
 if __name__ == "__main__":
     main()
