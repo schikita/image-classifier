@@ -7,7 +7,7 @@ predictor = Predictor(
     img_size=(128, 128)
 )
 
-result = predictor.predict(img_path, show = True)
+result = predictor.predict(img_path, show = False)
 
 print("📸 Предсказание:")
 print(f"  Класс: {result['label']}")
