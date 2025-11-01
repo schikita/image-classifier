@@ -28,7 +28,7 @@ export default function ImageClassifier() {
     setError(null);
     try {
       const data = await classifyImage(image);
-      setResult(data); // <-- сохраняем весь объект ответа
+      setResult(data); 
     } catch (err) {
       setError(err.message || "Request failed");
     } finally {
@@ -62,7 +62,7 @@ export default function ImageClassifier() {
         </p>
       )}
 
-      {/* опционально: топ-3 классов */}
+      
       {result?.probs && (
         <ul>
           {result.probs
