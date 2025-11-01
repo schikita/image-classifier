@@ -1,13 +1,21 @@
 from pathlib import Path
 import json
 from ai.model import CNNModel
-from ai.preprocess import prepare_data
+from ai.preprocess import (
+    prepare_data,
+    filter_broken_and_tiny,
+    remove_exact_duplicates,
+    clean_near_duplicates )
 
 def main():
     data_dir = "data/raw"
     img_size = (128, 128)
     val_split = 0.2
     batch_size = 32
+
+    filter_broken_and_tiny(data_dir)
+    remove_exact_duplicates(data_dir)
+    clean_near_duplicates(data_dir)
 
     train_flow, val_flow, num_classes = prepare_data(
         data_dir=data_dir, img_size=img_size, val_split=val_split, batch_size=batch_size
