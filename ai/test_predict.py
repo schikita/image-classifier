@@ -9,6 +9,6 @@ predictor = Predictor(
 
 result = predictor.predict(img_path, show = True)
 
-print("📸 Предсказание:")
-print(f"  Класс: {result['label']}")
-print(f"  Вероятность: {result['top_prob']*100:.2f}%")
+print("📸 Prediction:")
+print(f"  Class: {result['label']}")
+print(f"  Accuracy: {result['top_prob']*100:.2f}%")

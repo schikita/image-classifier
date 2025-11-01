@@ -1,12 +1,12 @@
 export async function classifyImage(file) {
-    const formData = new FormData();
-    formData.append("file", file);
+  const fd = new FormData();
+  fd.append("file", file);
 
-    const response = await fetch("http://127.0.0.1:5000/predict", {
-        method: "POST",
-        body: formData,
-    });
+  const res = await fetch("/api/predict", { 
+    method: "POST",
+    body: fd,
+  });
 
-    if (!response.ok) throw new Error("Error load in API...");
-    return response.json()
+  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  return res.json();
 }
