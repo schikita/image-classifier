@@ -1,12 +1,18 @@
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 import tempfile, os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+MODEL_PATH = BASE_DIR / "model" / "model.h5"
+LABELS_PATH = BASE_DIR / "model" / "labels.json"
+
 
 from ai.predict import Predictor
 
 app = Flask(__name__)
 
-# Загружаем модель только при первом запросе
+
 predictor = None
 
 def get_predictor():
@@ -14,8 +20,8 @@ def get_predictor():
     if predictor is None:
         try:
             predictor = Predictor(
-                model_path="model/model.h5",
-                labels_path="model/labels.json",
+                model_path=str(MODEL_PATH),
+                labels_path=str(LABELS_PATH),
                 img_size=(128, 128)
             )
         except FileNotFoundError:
@@ -39,7 +45,7 @@ def api_predict():
         tmp_path = tmp.name
 
     try:
-        out = pred.predict(tmp_path)  # {'index', 'label', 'probs', 'top_prob'}
+        out = pred.predict(tmp_path)
         return jsonify(out)
     finally:
         try:
