@@ -91,59 +91,39 @@ def api_predict():
     pred = get_predictor()
     raw = pred.predict(save_path)
 
+    idx = int(raw.get("index", -1))
     label = str(raw.get("label", "unknown"))
-    conf = raw.get("confidence", raw.get("top_prob", 0.0))
-    try:
-        confidence = float(conf)
-    except Exception:
-        confidence = 0.0
-    if not math.isfinite(confidence) or confidence < 0 or confidence > 1:
-        confidence = 0.0
+    probs = raw.get("probs", None)
+    top_prob = float(raw.get("top_prob", 0.0))
+    if not math.isfinite(top_prob) or not (0.0 <= top_prob <= 1.0):
+        top_prob = 0.0
 
-    probs = raw.get("probs")
+    repo.set_prediction(image_id, label, top_prob)
 
-    if isinstance(raw, dict):
-        label = raw.get("label") or raw.get("class") or raw.get("prediction") or "unknown"
-        confidence = float(raw.get("confidence") or raw.get("probability") or 0.0)
-        extra = {k: v for k, v in raw.items() if k not in ("label", "class", "prediction", "confidence", "probability")}
-    elif isinstance(raw, (list, tuple)) and len(raw) >= 2:
-        label = str(raw[0])
-        confidence = float(raw[1])
-        extra = {}
-    else:
-        label = str(raw)
-        confidence = 0.0
-        extra = {}
+    payload = {
+        "id": image_id,
+        "file": safe_name,
+        "stored_path": save_path,
+        "width": width,
+        "height": height,
+        "format": fmt,
+        "size_mb": size_mb,
 
-    try:
-        confidence = float(confidence)
-    except Exception:
-        confidence = 0.0
-    if not math.isfinite(confidence) or confidence < 0 or confidence > 1:
-        confidence = 0.0
+        "index": idx,
+        "label": label,
+        "top_prob": top_prob,        
 
-    repo.set_prediction(image_id, label, confidence)
+    
+        "predicted_label": label,
+        "confidence": top_prob
+    }
 
-    return jsonify({
-    "id": image_id,
-    "file": safe_name,
-    "stored_path": save_path,
-    "width": width,
-    "height": height,
-    "format": fmt,
-    "size_mb": size_mb,
+    
+    if isinstance(probs, (list, tuple)):
+        payload["probs"] = probs
+        payload["labels"] = [pred.id_to_label[i] for i in range(len(probs))]
 
-    # для фронта (твоя логика)
-    "label": label,
-    "top_prob": confidence,
-
-    # стандартные поля, чтобы не ломать ничего в БД
-    "predicted_label": label,
-    "confidence": confidence,
-
-    # если пришли вероятности
-    **({"probs": raw.get("probs")} if "probs" in raw else {})
-})
+    return jsonify(payload)
 
 @app.route("/api/confirm", methods=["POST"])
 def api_confirm():
