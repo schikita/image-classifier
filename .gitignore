@@ -9,3 +9,4 @@ model/*.json
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
+.env
