@@ -48,10 +48,21 @@ def get_predictor():
     return predictor
 
 
+from ai.predict import Predictor
+
+app = Flask(__name__)
+predictor = Predictor(
+    model_path="model/model.h5",
+    labels_path="model/labels.json",
+    img_size=(128, 128)
+)
+
+
 @app.route("/api/predict", methods=["POST"])
 def api_predict():
     if "file" not in request.files or request.files["file"].filename == "":
         return jsonify(error="No file uploaded (field name must be 'file')"), 400
+
 
    
     f = request.files["file"]
@@ -141,6 +152,23 @@ def api_confirm():
         return jsonify(error="not found"), 404
     return jsonify(ok=True)
 
+    f = request.files["file"]
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix='_'+secure_filename(f.filename)) as tmp:
+        f.save(tmp.name)
+        tmp_path = tmp.name
+
+    try:
+        out = predictor.predict(tmp_path)  
+        return jsonify(out)
+    finally:
+        try:
+            os.remove(tmp_path)
+        except Exception:
+            pass
+
+
 if __name__ == "__main__":
     
     app.run(host="127.0.0.1", port=5000, debug=True)
+

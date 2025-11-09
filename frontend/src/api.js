@@ -1,5 +1,6 @@
 export async function classifyImage(file) {
   const fd = new FormData();
+
   fd.append('file', file);
   const r = await fetch('/api/predict', { method: 'POST', body: fd });
   const data = await r.json();
@@ -14,4 +15,14 @@ export async function classifyImage(file) {
     label,
     top_prob: Number.isFinite(confidence) ? confidence : 0,
   };
+
+  fd.append("file", file);
+
+  const res = await fetch("/api/predict", { 
+    method: "POST",
+    body: fd,
+  });
+
+  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  return res.json();
 }
